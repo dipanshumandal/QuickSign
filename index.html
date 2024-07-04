@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>QuickSign</title>
+    <style>
+        /* .h{
+            background-color: black;
+        } */
+        .toptop {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .toptop img {
+            max-width: 50%;
+            height: auto;
+        }
+
+        .img {
+            max-width: 50%;
+            height: auto;
+        }
+
+        .main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .canvas {
+            border: 2px solid black;
+            /* background-color:white; */
+            max-width: 100%;
+            height: auto;
+        }
+
+        .top,
+        .bottom {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 800px;
+            margin: 20px 0;
+        }
+
+        .block,
+        input,
+        select,
+        button {
+            width: 100%;
+        }
+
+        .block {
+            margin: 10px 0;
+        }
+
+        .block>p {
+            margin: 10px auto;
+            text-align: center;
+        }
+
+        .bottom>button {
+            margin: 10px;
+        }
+
+        @media (min-width: 768px) {
+            .top,
+            .bottom {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+
+            .block {
+                margin: 10px;
+                width: calc(33.33% - 20px);
+            }
+        }
+    </style>
+    <link rel="icon" href="favicon.png">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+</head>
+
+<body class="h">
+    <div class="main">
+        <div class="toptop">
+            <img src="img/Screenshot_2024-07-04_at_5.49.17_PM-removebg-preview.png" class="img">
+        </div>
+        <div class="top">
+            <div class="block">
+                <p>Pen Ink Colour</p>
+                <input class="form-control" type="color" id="colorPicker">
+            </div>
+            <div class="block">
+                <p>Background</p>
+                <input class="form-control" type="color" id="canvasColor">
+            </div>
+            <div class="block">
+                <p>Pen Thickness</p>
+                <select class="custom-select" type="select" id="fontSizePicker">
+                    <option value="5">5px</option>
+                    <option value="10">10px</option>
+                    <option value="20">20px</option>
+                    <option value="30">30px</option>
+                    <option value="40">40px</option>
+                    <option value="50">50px</option>
+                </select>
+            </div>
+        </div>
+        <canvas class="canvas" id="myCanvas" width="800" height="400"></canvas>
+        <div class="bottom">
+            <button type="button" class="btn btn-danger" id="clearButton">Clear</button>
+            <button type="button" class="btn btn-success" id="saveButton">Save & download</button>
+            <button type="button" class="btn btn-warning" id="retrieveButton">Retrieve saved signature</button>
+        </div>
+    </div>
+
+    <script>
+        let history = [];
+
+        const colorPicker = document.getElementById('colorPicker');
+        const canvasColor = document.getElementById('canvasColor');
+        const canvas = document.getElementById('myCanvas');
+        const undoButton = document.getElementById('undoButton');
+        const clearButton = document.getElementById('clearButton');
+        const saveButton = document.getElementById('saveButton');
+        const fontPicker = document.getElementById('fontPicker');
+        const textInput = document.getElementById('textInput');
+        const fontSizePicker = document.getElementById('fontSizePicker');
+
+        const ctx = canvas.getContext('2d');
+
+        colorPicker.addEventListener('change', (event) => {
+            ctx.fillStyle = event.target.value;
+            ctx.strokeStyle = event.target.value;
+        });
+
+        canvasColor.addEventListener('change', (event) => {
+            ctx.fillStyle = event.target.value;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        });
+
+        canvas.addEventListener('mousedown', (event) => {
+            isDrawing = true;
+            lastX = event.offsetX;
+            lastY = event.offsetY;
+        });
+
+        canvas.addEventListener('mousemove', (event) => {
+            if (isDrawing) {
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(event.offsetX, event.offsetY);
+                ctx.stroke();
+
+                lastX = event.offsetX;
+                lastY = event.offsetY;
+            }
+        });
+
+        canvas.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+
+        fontSizePicker.addEventListener('change', (event) => {
+            ctx.lineWidth = event.target.value;
+        });
+
+        clearButton.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        saveButton.addEventListener('click', () => {
+            localStorage.setItem('canvasContents', canvas.toDataURL());
+
+            let link = document.createElement('a');
+            link.download = 'signature.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+
+        retrieveButton.addEventListener('click', () => {
+            let savedCanvas = localStorage.getItem('canvasContents');
+
+            if (savedCanvas) {
+                let img = new Image();
+                img.src = savedCanvas;
+                img.onload = () => {
+                    ctx.drawImage(img, 0, 0);
+                };
+            }
+        });
+    </script>
+</body>
+
+</html>
